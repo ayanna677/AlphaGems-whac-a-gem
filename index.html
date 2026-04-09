@@ -1,26 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Whac a Mole</title>
-    <link rel="stylesheet" href="mole.css">
-    <script src="mole.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="WHAC-A-GEM — AlphaGems Crystal Hunt. The ultimate gem smashing game!" />
+  <meta property="og:title" content="⬡ WHAC-A-GEM — AlphaGems" />
+  <meta property="og:description" content="Smash glowing gems, dodge bombs, build combos! Play now." />
+  <title>⬡ WHAC-A-GEM ⬡ AlphaGems Crystal Hunt</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet" />
 </head>
 <body>
-    <h1>Whac a Mole</h1>
-    <h2 id="score">0</h2>
 
-    <!-- Timer -->
-    <div>Time: <span id="timer">30</span> seconds</div>
+  <!-- CANVASES -->
+  <canvas id="bg-canvas"></canvas>
+  <canvas id="particle-canvas"></canvas>
 
-    <!-- Game container (wrap board + restart button) -->
-    <div id="game-container">
-        <!-- Game Board -->
-        <div id="board"></div>
+  <!-- FRENZY OVERLAY -->
+  <div id="frenzy-flash"></div>
 
-        <!-- Restart Button -->
-        <button id="restart-btn" style="display:none;">Restart Game</button>
+  <!-- MUSIC TOGGLE -->
+  <button id="music-toggle" class="music-btn" title="Toggle Music" onclick="toggleMusic()">🔊</button>
+
+  <!-- ===== START SCREEN ===== -->
+  <div id="start-screen" class="overlay-screen">
+    <div class="overlay-box">
+      <img class="overlay-gem" id="logo-start" src="" alt="AlphaGems" />
+      <div class="overlay-title">WHAC-A-GEM</div>
+      <p class="overlay-tagline">⬡ ALPHAGEMS CRYSTAL HUNT ⬡</p>
+
+      <div class="guide-grid">
+        <div class="guide-item">
+          <span class="guide-icon">💎</span>
+          <div><h4>HIT THE GEM</h4><p>Smash the glowing AlphaGems crystal for +10 pts!</p></div>
+        </div>
+        <div class="guide-item">
+          <span class="guide-icon">💣</span>
+          <div><h4>DODGE BOMBS</h4><p>One bomb click = instant death. Stay sharp!</p></div>
+        </div>
+        <div class="guide-item">
+          <span class="guide-icon">⚡</span>
+          <div><h4>BUILD COMBOS</h4><p>Consecutive hits multiply your score — up to 5x!</p></div>
+        </div>
+        <div class="guide-item">
+          <span class="guide-icon">🔥</span>
+          <div><h4>CRYSTAL FRENZY</h4><p>Fill the power bar → hyper mode + bonus time!</p></div>
+        </div>
+        <div class="guide-item">
+          <span class="guide-icon">🐭</span>
+          <div><h4>MOLE BONUS</h4><p>The sneaky mole gives +5 gems when whacked!</p></div>
+        </div>
+        <div class="guide-item">
+          <span class="guide-icon">⏱️</span>
+          <div><h4>BEAT THE CLOCK</h4><p>30 seconds. Smash as many gems as possible!</p></div>
+        </div>
+      </div>
+
+      <div class="diff-section">
+        <div class="diff-label">SELECT DIFFICULTY</div>
+        <div class="diff-grid">
+          <button class="diff-btn active" data-diff="easy">🟢 EASY</button>
+          <button class="diff-btn" data-diff="normal">🔵 NORMAL</button>
+          <button class="diff-btn" data-diff="hard">🔴 HARD</button>
+          <button class="diff-btn" data-diff="insane">⚡ INSANE</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-huge" id="play-btn">⬡ PLAY NOW ⬡</button>
+      <p class="mobile-note">📱 Works on mobile — tap to smash!</p>
     </div>
+  </div>
+
+  <!-- ===== GAME OVER SCREEN ===== -->
+  <div id="gameover-screen" class="overlay-screen hidden">
+    <div class="overlay-box">
+      <img class="overlay-gem" id="logo-go" src="" alt="AlphaGems" />
+      <div class="overlay-title" id="go-title">TIME'S UP!</div>
+      <div class="final-score" id="go-score">0</div>
+      <div class="final-grade" id="go-grade">Crystal Novice</div>
+      <p class="go-msg" id="go-msg">Keep hunting for gems!</p>
+      <div class="stats-row">
+        <div class="stat-pill">BEST <span id="go-best">0</span></div>
+        <div class="stat-pill">COMBO <span id="go-combo">x1</span></div>
+        <div class="stat-pill">HITS <span id="go-hits">0</span></div>
+        <div class="stat-pill">ACC <span id="go-acc">0%</span></div>
+      </div>
+      <div class="go-btns">
+        <button class="btn btn-primary" id="retry-btn">🔄 PLAY AGAIN</button>
+        <button class="btn btn-gold" id="menu-btn">📖 MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== GAME UI ===== -->
+  <div id="game-ui">
+    <!-- HEADER -->
+    <header class="game-header">
+      <div class="gem-logo-wrap">
+        <img class="gem-logo-img" id="logo-main" src="" alt="AlphaGems" />
+      </div>
+      <div class="title-main">⬡ WHAC-A-GEM ⬡</div>
+      <div class="title-sub">AlphaGems Crystal Hunt</div>
+    </header>
+
+    <!-- HUD -->
+    <div class="hud">
+      <div class="hud-chip">
+        <span class="hud-icon">💎</span>
+        <div>
+          <div class="hud-lbl">SCORE</div>
+          <div class="hud-val" id="score-val">0</div>
+        </div>
+      </div>
+
+      <div class="timer-wrap">
+        <svg id="timer-svg" viewBox="0 0 82 82" xmlns="http://www.w3.org/2000/svg">
+          <circle class="timer-track" cx="41" cy="41" r="35"/>
+          <circle class="timer-fill" id="arc-fill" cx="41" cy="41" r="35"
+            stroke-dasharray="219.9" stroke-dashoffset="0"/>
+          <defs>
+            <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#a855f7"/>
+              <stop offset="100%" stop-color="#06b6d4"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="timer-overlay">
+          <div class="timer-number" id="timer-val">30</div>
+          <div class="timer-label">SEC</div>
+        </div>
+      </div>
+
+      <div class="hud-chip">
+        <span class="hud-icon">⚡</span>
+        <div>
+          <div class="hud-lbl">COMBO</div>
+          <div class="hud-val" id="combo-val">x1</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMBO TEXT -->
+    <div id="combo-display"></div>
+
+    <!-- POWER BAR -->
+    <div class="power-bar-wrap">
+      <div class="power-bar-labels">
+        <span>🔥 POWER BAR</span>
+        <span id="power-pct">0%</span>
+      </div>
+      <div class="power-bar-bg">
+        <div class="power-bar-fill" id="power-fill"></div>
+      </div>
+    </div>
+
+    <!-- 3D BOARD -->
+    <div class="board-perspective">
+      <div id="board"></div>
+    </div>
+
+    <div class="diff-indicator" id="diff-indicator">⬡ EASY MODE ⬡</div>
+  </div>
+
+  <script src="game.js"></script>
 </body>
 </html>
