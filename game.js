@@ -179,19 +179,27 @@ function runLoadingScreen(){
   const bar=$('loading-bar');
   const txt=$('loading-text');
   let step=0;
+  // Hard fallback: always show start screen after 4s no matter what
+  const hardTimeout=setTimeout(()=>{
+    const ls=$('loading-screen');
+    if(ls&&!ls.classList.contains('gone')){
+      ls.classList.add('fade-out');
+      setTimeout(()=>{ ls.classList.add('gone'); ls.style.display='none'; $('start-screen').classList.remove('hidden'); },900);
+    }
+  },4000);
   const iv=setInterval(()=>{
     loadProgress=Math.min(100,loadProgress+Math.random()*14+5);
     if(bar) bar.style.width=loadProgress+'%';
     if(txt && step<LOAD_MSGS.length) txt.textContent=LOAD_MSGS[Math.floor(step)];
     step+=.8;
     if(loadProgress>=100){
-      clearInterval(iv);
+      clearInterval(iv); clearTimeout(hardTimeout);
       if(txt) txt.textContent='Ready! ✨';
       setTimeout(()=>{
         const ls=$('loading-screen');
         if(ls) ls.classList.add('fade-out');
         setTimeout(()=>{
-          if(ls) ls.style.display='none';
+          if(ls){ ls.classList.add('gone'); ls.style.display='none'; }
           $('start-screen').classList.remove('hidden');
         },900);
       },500);
@@ -229,17 +237,17 @@ function initLoadingParticles(){
     });
   }
 
-  function drawShard(c,x,y,r,rot){
+  function drawShard(c,x,y,r,rot,col){
     c.save(); c.translate(x,y); c.rotate(rot);
     c.beginPath();
     const pts=[[0,-r],[r*.6,-r*.3],[r*.7,r*.35],[0,r],[-r*.7,r*.35],[-r*.6,-r*.3]];
-    c.moveTo(pts[0][0],pts[0][1]); pts.forEach(p=>c.lineTo(p[0],p[1])); c.closePath();
-    c.fillStyle=p.col||'rgba(168,85,247,.5)'; c.strokeStyle='rgba(192,132,252,.6)'; c.lineWidth=1;
+    c.moveTo(pts[0][0],pts[0][1]); pts.forEach(pt=>c.lineTo(pt[0],pt[1])); c.closePath();
+    c.fillStyle=col||'rgba(168,85,247,.5)'; c.strokeStyle='rgba(192,132,252,.6)'; c.lineWidth=1;
     c.fill(); c.stroke(); c.restore();
   }
 
   function tick(){
-    if(!$('loading-screen')||$('loading-screen').style.display==='none') return;
+    if(!$('loading-screen')||$('loading-screen').classList.contains('gone')) return;
     ctx.clearRect(0,0,cv.width,cv.height);
     lp.forEach(p=>{
       p.x+=p.vx; p.y+=p.vy; p.life+=.008;
@@ -249,7 +257,7 @@ function initLoadingParticles(){
       if(p.type==='shard'){
         p.rot+=p.rotSpd;
         ctx.globalAlpha=a*.7;
-        drawShard(ctx,p.x,p.y,p.r,p.rot);
+        drawShard(ctx,p.x,p.y,p.r,p.rot,p.col);
       } else {
         ctx.globalAlpha=a;
         ctx.fillStyle=p.col;
